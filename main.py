@@ -24,9 +24,17 @@ def home():
 @bot.message_handler(commands=['start'])
 def start(message):
     if message.from_user.id == ADMIN_ID:
-        bot.reply_to(message, "👑 Salom, xo'jayin! Bot ishga tayyor.")
+        bot.reply_to(
+            message,
+            "👑 Salom, xo'jayin! Bot ishga tayyor.\n"
+            "👑 Здравствуйте, хозяин! Бот готов к работе."
+        )
     else:
-        bot.reply_to(message, "👋 Assalomu alaykum! Xabaringizni yozing, u @oxrnn ga yuboriladi.")
+        bot.reply_to(
+            message,
+            "👋 Assalomu alaykum! Savolingizni yozing, u @oxrnn ga yuboriladi.\n"
+            "👋 Здравствуйте! Напишите ваш вопрос, он будет отправлен @oxrnn."
+        )
 
 # Foydalanuvchi xabarlarini adminga yuborish
 @bot.message_handler(func=lambda message: message.from_user.id != ADMIN_ID)
@@ -35,26 +43,30 @@ def forward_to_admin(message):
         # "Javob berish" tugmasi
         markup = types.InlineKeyboardMarkup()
         btn = types.InlineKeyboardButton(
-            "✍️ Javob berish", 
+            "✍️ Javob berish / Ответить", 
             callback_data=f"reply_{message.from_user.id}"
         )
         markup.add(btn)
         
         # Adminga yuborish
-        username = message.from_user.username or "Username yo'q"
+        username = message.from_user.username or "Username yo'q / Нет username"
         bot.send_message(
             ADMIN_ID,
-            f"📩 YANGI XABAR\n"
+            f"📩 YANGI XABAR / НОВОЕ СООБЩЕНИЕ\n"
             f"━━━━━━━━━━━━━━━\n"
-            f"👤 Kimdan: @{username}\n"
+            f"👤 Kimdan / От: @{username}\n"
             f"🆔 ID: {message.from_user.id}\n"
             f"━━━━━━━━━━━━━━━\n"
-            f"💬 Xabar:\n{message.text}",
+            f"💬 Xabar / Сообщение:\n{message.text}",
             reply_markup=markup
         )
         
         # Foydalanuvchiga javob
-        bot.reply_to(message, "✅ Xabaringiz yuborildi!")
+        bot.reply_to(
+            message,
+            "✅ Xabaringiz yuborildi!\n"
+            "✅ Сообщение отправлено!"
+        )
     except Exception as e:
         print(f"Xato: {e}")
 
@@ -67,14 +79,14 @@ def ask_reply(call):
         # "Bekor qilish" tugmasi
         markup = types.InlineKeyboardMarkup()
         cancel_btn = types.InlineKeyboardButton(
-            "❌ Bekor qilish", 
+            "❌ Bekor qilish / Отмена", 
             callback_data="cancel_reply"
         )
         markup.add(cancel_btn)
         
         msg = bot.send_message(
             call.message.chat.id,
-            f"✍️ {user_id} foydalanuvchiga javob yozing:",
+            f"✍️ {user_id} foydalanuvchiga javob yozing / Напишите ответ:",
             reply_markup=markup
         )
         
@@ -87,7 +99,7 @@ def ask_reply(call):
 @bot.callback_query_handler(func=lambda call: call.data == "cancel_reply")
 def cancel_reply(call):
     bot.edit_message_text(
-        "❌ Javob yozish bekor qilindi",
+        "❌ Javob yozish bekor qilindi / Ответ отменён",
         call.message.chat.id,
         call.message.message_id
     )
@@ -97,24 +109,37 @@ def process_reply(message, user_id):
     try:
         bot.send_message(
             user_id,
-            f"📨 Admin javobi:\n"
+            f"📨  javob / Ответ:\n"
             f"━━━━━━━━━━━━━━━\n"
             f"{message.text}"
         )
-        bot.reply_to(message, "✅ Javob yuborildi!")
+        bot.reply_to(
+            message,
+            "✅ Javob yuborildi!\n"
+            "✅ Ответ отправлен!"
+        )
     except Exception as e:
-        bot.reply_to(message, f"❌ Yuborib bo'lmadi: {e}")
+        bot.reply_to(
+            message,
+            f"❌ Yuborib bo'lmadi / Ошибка: {e}"
+        )
 
-# /help komandasi (admin uchun)
+# /help komandasi
 @bot.message_handler(commands=['help'])
-def help_admin(message):
+def help_command(message):
     if message.from_user.id == ADMIN_ID:
         bot.reply_to(
             message,
-            "📋 MAVJUD KOMANDALAR:\n"
-            "/start - Botni tekshirish\n"
-            "/help - Bu xabar\n\n"
-            "💡 Odamlar botga yozadi — siz bu yerga olasiz."
+            "📋 MAVJUD KOMANDALAR / КОМАНДЫ:\n"
+            "/start - Botni tekshirish / Проверить бота\n"
+            "/help - Bu xabar / Это сообщение\n\n"
+            "💡 Odamlar botga yozadi — siz bu yerga olasiz.\n"
+            "💡 Люди пишут боту — вы получаете сюда."
+        )
+    else:
+        bot.reply_to(
+            message,
+            "📝 Savolingizni yozing / Напишите ваш вопрос"
         )
 
 # Botni ishga tushirish
