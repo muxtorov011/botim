@@ -24,17 +24,11 @@ def home():
 @bot.message_handler(commands=['start'])
 def start(message):
     if message.from_user.id == ADMIN_ID:
-        bot.reply_to(
-            message,
-            "👑 Salom, xo'jayin! Bot ishga tayyor.\n"
-            "👑 Здравствуйте, хозяин! Бот готов к работе."
-        )
+        bot.send_message(message.chat.id, "👑 Salom, xo'jayin! Bot ishga tayyor.")
+        bot.send_message(message.chat.id, "👑 Здравствуйте, хозяин! Бот готов к работе.")
     else:
-        bot.reply_to(
-            message,
-            "👋 Assalomu alaykum! Savolingizni yozing, u @oxrnn ga yuboriladi.\n"
-            "👋 Здравствуйте! Напишите ваш вопрос, он будет отправлен @oxrnn."
-        )
+        bot.send_message(message.chat.id, "👋 Assalomu alaykum! Savolingizni yozing, u @oxrnn ga yuboriladi.")
+        bot.send_message(message.chat.id, "👋 Здравствуйте! Напишите ваш вопрос, он будет отправлен @oxrnn.")
 
 # Foydalanuvchi xabarlarini adminga yuborish
 @bot.message_handler(func=lambda message: message.from_user.id != ADMIN_ID)
@@ -48,25 +42,33 @@ def forward_to_admin(message):
         )
         markup.add(btn)
         
-        # Adminga yuborish
-        username = message.from_user.username or "Username yo'q / Нет username"
+        # Adminga yuborish (O'zbekcha)
+        username = message.from_user.username or "Username yo'q"
         bot.send_message(
             ADMIN_ID,
-            f"📩 YANGI XABAR / НОВОЕ СООБЩЕНИЕ\n"
+            f"📩 YANGI XABAR\n"
             f"━━━━━━━━━━━━━━━\n"
-            f"👤 Kimdan / От: @{username}\n"
+            f"👤 Kimdan: @{username}\n"
             f"🆔 ID: {message.from_user.id}\n"
             f"━━━━━━━━━━━━━━━\n"
-            f"💬 Xabar / Сообщение:\n{message.text}",
+            f"💬 Xabar:\n{message.text}",
             reply_markup=markup
         )
         
-        # Foydalanuvchiga javob
-        bot.reply_to(
-            message,
-            "✅ Xabaringiz yuborildi!\n"
-            "✅ Сообщение отправлено!"
+        # Adminga yuborish (Ruscha)
+        bot.send_message(
+            ADMIN_ID,
+            f"📩 НОВОЕ СООБЩЕНИЕ\n"
+            f"━━━━━━━━━━━━━━━\n"
+            f"👤 От: @{username}\n"
+            f"🆔 ID: {message.from_user.id}\n"
+            f"━━━━━━━━━━━━━━━\n"
+            f"💬 Сообщение:\n{message.text}"
         )
+        
+        # Foydalanuvchiga javob
+        bot.send_message(message.chat.id, "✅ Xabaringiz yuborildi!")
+        bot.send_message(message.chat.id, "✅ Сообщение отправлено!")
     except Exception as e:
         print(f"Xato: {e}")
 
@@ -84,63 +86,66 @@ def ask_reply(call):
         )
         markup.add(cancel_btn)
         
-        msg = bot.send_message(
+        bot.send_message(
             call.message.chat.id,
-            f"✍️ {user_id} foydalanuvchiga javob yozing / Напишите ответ:",
+            f"✍️ {user_id} foydalanuvchiga javob yozing:",
             reply_markup=markup
         )
-        
-        # Javobni kutish
-        bot.register_next_step_handler(msg, process_reply, user_id)
+        bot.send_message(
+            call.message.chat.id,
+            f"✍️ Напишите ответ пользователю {user_id}:"
+        )
     except Exception as e:
         print(f"Xato: {e}")
 
 # Javobni bekor qilish
 @bot.callback_query_handler(func=lambda call: call.data == "cancel_reply")
 def cancel_reply(call):
-    bot.edit_message_text(
-        "❌ Javob yozish bekor qilindi / Ответ отменён",
-        call.message.chat.id,
-        call.message.message_id
-    )
+    bot.send_message(call.message.chat.id, "❌ Javob yozish bekor qilindi")
+    bot.send_message(call.message.chat.id, "❌ Ответ отменён")
 
 # Foydalanuvchiga javob yuborish
 def process_reply(message, user_id):
     try:
         bot.send_message(
             user_id,
-            f"📨  javob / Ответ:\n"
+            f"📨 Admin javobi:\n"
             f"━━━━━━━━━━━━━━━\n"
             f"{message.text}"
         )
-        bot.reply_to(
-            message,
-            "✅ Javob yuborildi!\n"
-            "✅ Ответ отправлен!"
+        bot.send_message(
+            user_id,
+            f"📨 Ответ администратора:\n"
+            f"━━━━━━━━━━━━━━━\n"
+            f"{message.text}"
         )
+        bot.send_message(message.chat.id, "✅ Javob yuborildi!")
+        bot.send_message(message.chat.id, "✅ Ответ отправлен!")
     except Exception as e:
-        bot.reply_to(
-            message,
-            f"❌ Yuborib bo'lmadi / Ошибка: {e}"
-        )
+        bot.send_message(message.chat.id, f"❌ Yuborib bo'lmadi: {e}")
+        bot.send_message(message.chat.id, f"❌ Ошибка: {e}")
 
 # /help komandasi
 @bot.message_handler(commands=['help'])
 def help_command(message):
     if message.from_user.id == ADMIN_ID:
-        bot.reply_to(
-            message,
-            "📋 MAVJUD KOMANDALAR / КОМАНДЫ:\n"
-            "/start - Botni tekshirish / Проверить бота\n"
-            "/help - Bu xabar / Это сообщение\n\n"
-            "💡 Odamlar botga yozadi — siz bu yerga olasiz.\n"
+        bot.send_message(
+            message.chat.id,
+            "📋 MAVJUD KOMANDALAR:\n"
+            "/start - Botni tekshirish\n"
+            "/help - Bu xabar\n\n"
+            "💡 Odamlar botga yozadi — siz bu yerga olasiz."
+        )
+        bot.send_message(
+            message.chat.id,
+            "📋 КОМАНДЫ:\n"
+            "/start - Проверить бота\n"
+            "/help - Это сообщение\n\n"
             "💡 Люди пишут боту — вы получаете сюда."
         )
     else:
-        bot.reply_to(
-            message,
-            "📝 Savolingizni yozing / Напишите ваш вопрос"
-        )
+        bot.send_message(message.chat.id, "📝 Savolingizni yozing")
+        bot.send_message(message.chat.id, "📝 Напишите ваш вопрос")
 
 # Botni ishga tushirish
 if __name__ == '__main__':
