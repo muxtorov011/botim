@@ -66,8 +66,9 @@ def forward_to_admin(message):
             f"💬 Сообщение:\n{message.text}"
         )
         
-        # Foydalanuvchiga javob
+        # Foydalanuvchiga javob (O'zbekcha)
         bot.send_message(message.chat.id, "✅ Xabaringiz yuborildi!")
+        # Foydalanuvchiga javob (Ruscha)
         bot.send_message(message.chat.id, "✅ Сообщение отправлено!")
     except Exception as e:
         print(f"Xato: {e}")
