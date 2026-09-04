@@ -1,15 +1,24 @@
 # -*- coding: utf-8 -*-
 import telebot
 from telebot import types
+import os
+import threading
+from flask import Flask
+
+app = Flask(__name__)
 
 # ====== SOZLAMALAR ======
-BOT_TOKEN = "8949249150:AAExkt42L6uSHrGnDeU53ygEMUPjfGcn41o"  # ← BotFather dan olingan token
-ADMIN_ID = 6926482253  # ← O'zingizning ID raqamingiz
+BOT_TOKEN = os.environ.get('BOT_TOKEN', '8949249150:AAExkt42L6uSHrGnDeU53ygEMUPjfGcn41o')
+ADMIN_ID = int(os.environ.get('ADMIN_ID', '6926482253'))
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
 print("🤖 Bot ishga tushmoqda...")
 print("=========================")
+
+@app.route('/')
+def home():
+    return "Bot ishlamoqda!"
 
 # /start komandasi
 @bot.message_handler(commands=['start'])
@@ -109,6 +118,12 @@ def help_admin(message):
         )
 
 # Botni ishga tushirish
-print("✅ Bot muvaffaqiyatli ishga tushdi!")
-print("To'xtatish uchun Ctrl+C bosing")
-bot.polling(none_stop=True)
+if __name__ == '__main__':
+    print("✅ Bot muvaffaqiyatli ishga tushdi!")
+    
+    # Botni alohida thread'da ishga tushirish
+    threading.Thread(target=bot.polling, kwargs={'none_stop': True}).start()
+    
+    # Web serverni ishga tushirish
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
