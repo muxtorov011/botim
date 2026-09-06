@@ -92,7 +92,7 @@ def send_broadcast(message):
     
     for user_id in users_list:
         try:
-            bot.send_message(user_id, f"📢 Xabar:\n\n{message.text}")
+            bot.send_message(user_id, f" :\n\n{message.text}")
             sent_count += 1
         except:
             failed_count += 1
