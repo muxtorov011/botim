@@ -3,6 +3,7 @@ import telebot
 from telebot import types
 import os
 import threading
+import json
 from flask import Flask
 
 app = Flask(__name__)
@@ -13,7 +14,22 @@ ADMIN_ID = int(os.environ.get('ADMIN_ID', '6926482253'))
 bot = telebot.TeleBot(BOT_TOKEN)
 
 user_data = {}
-users_list = set()
+
+# Foydalanuvchilarni saqlash uchun fayl
+USERS_FILE = 'users.json'
+
+def load_users():
+    try:
+        with open(USERS_FILE, 'r') as f:
+            return set(json.load(f))
+    except:
+        return set()
+
+def save_users():
+    with open(USERS_FILE, 'w') as f:
+        json.dump(list(users_list), f)
+
+users_list = load_users()
 
 print("🤖 Bot ishga tushmoqda...")
 
@@ -27,6 +43,7 @@ def start(message):
         bot.send_message(message.chat.id, "👑 Salom, xo'jayin! Bot ishga tayyor.")
     else:
         users_list.add(message.from_user.id)
+        save_users()
         bot.send_message(message.chat.id, "👋 Assalomu alaykum! Savolingizni yozing, u @oxrnn ga yuboriladi.")
         bot.send_message(message.chat.id, "👋 Здравствуйте! Напишите ваш вопрос, он будет отправлен @oxrnn.")
 
@@ -35,8 +52,12 @@ def broadcast_command(message):
     if message.from_user.id != ADMIN_ID:
         return
     
-    msg = bot.send_message(message.chat.id, "📢 Yuboriladigan xabarni yozing:")
-    bot.register_next_step_handler(msg, send_broadcast)
+    if not users_list:
+        bot.send_message(message.chat.id, "❌ Hozircha foydalanuvchilar yo'q!")
+        return
+    
+    bot.send_message(message.chat.id, f"📢 {len(users_list)} ta foydalanuvchiga yuboriladigan xabarni yozing:")
+    bot.register_next_step_handler(message, send_broadcast)
 
 def send_broadcast(message):
     if message.from_user.id != ADMIN_ID:
@@ -58,9 +79,19 @@ def send_broadcast(message):
         f"❌ Yuborilmadi: {failed_count} ta"
     )
 
+@bot.message_handler(commands=['users'])
+def users_command(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    
+    bot.send_message(message.chat.id, f"👥 Jami foydalanuvchilar: {len(users_list)} ta")
+
 @bot.message_handler(func=lambda message: message.from_user.id != ADMIN_ID)
 def forward_to_admin(message):
     try:
+        users_list.add(message.from_user.id)
+        save_users()
+        
         user_data[message.from_user.id] = {
             'username': message.from_user.username or "Username yo'q",
             'first_name': message.from_user.first_name or ""
@@ -150,7 +181,8 @@ def help_command(message):
             "📋 Komandalar:\n"
             "/start - Botni tekshirish\n"
             "/help - Bu xabar\n"
-            "/broadcast - Hammaga xabar yuborish\n\n"
+            "/broadcast - Hammaga xabar yuborish\n"
+            "/users - Foydalanuvchilar soni\n\n"
             "💡 Odamlar botga yozadi — siz bu yerga olasiz."
         )
     else:
