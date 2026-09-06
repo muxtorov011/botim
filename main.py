@@ -126,10 +126,15 @@ def help_command(message):
         bot.send_message(message.chat.id, "📝 Savolingizni yozing")
         bot.send_message(message.chat.id, "📝 Напишите ваш вопрос")
 
-if __name__ == '__main__':
+# Botni ishga tushirish
+def run_bot():
     print("✅ Bot muvaffaqiyatli ishga tushdi!")
-    
-    threading.Thread(target=bot.polling, kwargs={'none_stop': True}).start()
-    
+    bot.polling(none_stop=True)
+
+# Botni alohida thread'da ishga tushirish
+threading.Thread(target=run_bot).start()
+
+# Web serverni ishga tushirish
+if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
