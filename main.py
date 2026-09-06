@@ -13,6 +13,7 @@ ADMIN_ID = int(os.environ.get('ADMIN_ID', '6926482253'))
 bot = telebot.TeleBot(BOT_TOKEN)
 
 user_data = {}
+users_list = set()
 
 print("🤖 Bot ishga tushmoqda...")
 
@@ -25,8 +26,37 @@ def start(message):
     if message.from_user.id == ADMIN_ID:
         bot.send_message(message.chat.id, "👑 Salom, xo'jayin! Bot ishga tayyor.")
     else:
+        users_list.add(message.from_user.id)
         bot.send_message(message.chat.id, "👋 Assalomu alaykum! Savolingizni yozing, u @oxrnn ga yuboriladi.")
         bot.send_message(message.chat.id, "👋 Здравствуйте! Напишите ваш вопрос, он будет отправлен @oxrnn.")
+
+@bot.message_handler(commands=['broadcast'])
+def broadcast_command(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    
+    msg = bot.send_message(message.chat.id, "📢 Yuboriladigan xabarni yozing:")
+    bot.register_next_step_handler(msg, send_broadcast)
+
+def send_broadcast(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    
+    sent_count = 0
+    failed_count = 0
+    
+    for user_id in users_list:
+        try:
+            bot.send_message(user_id, f"📢 Xabar:\n\n{message.text}")
+            sent_count += 1
+        except:
+            failed_count += 1
+    
+    bot.send_message(
+        message.chat.id,
+        f"✅ Yuborildi: {sent_count} ta\n"
+        f"❌ Yuborilmadi: {failed_count} ta"
+    )
 
 @bot.message_handler(func=lambda message: message.from_user.id != ADMIN_ID)
 def forward_to_admin(message):
@@ -119,22 +149,18 @@ def help_command(message):
             message.chat.id,
             "📋 Komandalar:\n"
             "/start - Botni tekshirish\n"
-            "/help - Bu xabar\n\n"
+            "/help - Bu xabar\n"
+            "/broadcast - Hammaga xabar yuborish\n\n"
             "💡 Odamlar botga yozadi — siz bu yerga olasiz."
         )
     else:
         bot.send_message(message.chat.id, "📝 Savolingizni yozing")
         bot.send_message(message.chat.id, "📝 Напишите ваш вопрос")
 
-# Botni ishga tushirish
-def run_bot():
-    print("✅ Bot muvaffaqiyatli ishga tushdi!")
-    bot.polling(none_stop=True)
-
-# Botni alohida thread'da ishga tushirish
-threading.Thread(target=run_bot).start()
-
-# Web serverni ishga tushirish
 if __name__ == '__main__':
+    print("✅ Bot muvaffaqiyatli ishga tushdi!")
+    
+    threading.Thread(target=bot.polling, kwargs={'none_stop': True}).start()
+    
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
