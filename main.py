@@ -14,8 +14,6 @@ ADMIN_ID = int(os.environ.get('ADMIN_ID', '6926482253'))
 bot = telebot.TeleBot(BOT_TOKEN)
 
 user_data = {}
-
-# Foydalanuvchilarni saqlash uchun fayl
 USERS_FILE = 'users.json'
 
 def load_users():
@@ -46,6 +44,32 @@ def start(message):
         save_users()
         bot.send_message(message.chat.id, "👋 Assalomu alaykum! Savolingizni yozing, u @oxrnn ga yuboriladi.")
         bot.send_message(message.chat.id, "👋 Здравствуйте! Напишите ваш вопрос, он будет отправлен @oxrnn.")
+
+@bot.message_handler(commands=['users'])
+def users_command(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    
+    if not users_list:
+        bot.send_message(message.chat.id, "❌ Hozircha foydalanuvchilar yo'q!")
+        return
+    
+    users_info = []
+    for user_id in users_list:
+        try:
+            user = bot.get_chat(user_id)
+            username = f"@{user.username}" if user.username else "Username yo'q"
+            first_name = user.first_name or "Ism yo'q"
+            users_info.append(f"👤 {first_name}\n   {username}\n   🆔 {user_id}")
+        except:
+            users_info.append(f"👤 Noma'lum\n   🆔 {user_id}")
+    
+    bot.send_message(message.chat.id, f"👥 Jami: {len(users_list)} ta foydalanuvchi")
+    
+    for i in range(0, len(users_info), 10):
+        batch = users_info[i:i+10]
+        text = "\n\n".join(batch)
+        bot.send_message(message.chat.id, text)
 
 @bot.message_handler(commands=['broadcast'])
 def broadcast_command(message):
@@ -78,13 +102,6 @@ def send_broadcast(message):
         f"✅ Yuborildi: {sent_count} ta\n"
         f"❌ Yuborilmadi: {failed_count} ta"
     )
-
-@bot.message_handler(commands=['users'])
-def users_command(message):
-    if message.from_user.id != ADMIN_ID:
-        return
-    
-    bot.send_message(message.chat.id, f"👥 Jami foydalanuvchilar: {len(users_list)} ta")
 
 @bot.message_handler(func=lambda message: message.from_user.id != ADMIN_ID)
 def forward_to_admin(message):
@@ -182,7 +199,7 @@ def help_command(message):
             "/start - Botni tekshirish\n"
             "/help - Bu xabar\n"
             "/broadcast - Hammaga xabar yuborish\n"
-            "/users - Foydalanuvchilar soni\n\n"
+            "/users - Foydalanuvchilar ro'yxati\n\n"
             "💡 Odamlar botga yozadi — siz bu yerga olasiz."
         )
     else:
